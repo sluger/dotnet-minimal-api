@@ -28,50 +28,65 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.MapGet("/todoitems", async (TodoDbContext db) =>
-    await db.Todos.ToListAsync());
+var todoItems = app.MapGroup("/todoitems");
 
-app.MapGet("/todoitems/complete", async (TodoDbContext db) =>
-    await db.Todos.Where(t => t.IsComplete).ToListAsync());
+todoItems.MapGet("/", GetAllTodos);
+todoItems.MapGet("/complete", GetCompleteTodos);
+todoItems.MapGet("/{id}", GetTodo);
+todoItems.MapPost("/", CreateTodo);
+todoItems.MapPut("/{id}", UpdateTodo);
+todoItems.MapDelete("/{id}", DeleteTodo);
 
-app.MapGet("/todoitems/{id}", async (int id, TodoDbContext db) =>
-    await db.Todos.FindAsync(id)
+app.Run();
+
+static async Task<IResult> GetAllTodos(TodoDbContext db)
+{
+    return TypedResults.Ok(await db.Todos.ToArrayAsync());
+}
+
+static async Task<IResult> GetCompleteTodos(TodoDbContext db)
+{
+    return TypedResults.Ok(await db.Todos.Where(t => t.IsComplete).ToListAsync());
+}
+
+static async Task<IResult> GetTodo(int id, TodoDbContext db)
+{
+    return await db.Todos.FindAsync(id)
         is Todo todo
-            ? Results.Ok(todo)
-            : Results.NotFound());
+            ? TypedResults.Ok(todo)
+            : TypedResults.NotFound();
+}
 
-app.MapPost("/todoitems", async (Todo todo, TodoDbContext db) =>
+static async Task<IResult> CreateTodo(Todo todo, TodoDbContext db)
 {
     db.Todos.Add(todo);
     await db.SaveChangesAsync();
 
-    return Results.Created($"/todoitems/{todo.Id}", todo);
-});
+    return TypedResults.Created($"/todoitems/{todo.Id}", todo);
+}
 
-app.MapPut("/todoitems/{id}", async (int id, Todo inputTodo, TodoDbContext db) =>
+static async Task<IResult> UpdateTodo(int id, Todo inputTodo, TodoDbContext db)
 {
     var todo = await db.Todos.FindAsync(id);
 
-    if (todo is null) return Results.NotFound();
+    if (todo is null) return TypedResults.NotFound();
 
     todo.Name = inputTodo.Name;
     todo.IsComplete = inputTodo.IsComplete;
 
     await db.SaveChangesAsync();
 
-    return Results.NoContent();
-});
+    return TypedResults.NoContent();
+}
 
-app.MapDelete("/todoitems/{id}", async (int id, TodoDbContext db) =>
+static async Task<IResult> DeleteTodo(int id, TodoDbContext db)
 {
     if (await db.Todos.FindAsync(id) is Todo todo)
     {
         db.Todos.Remove(todo);
         await db.SaveChangesAsync();
-        return Results.NoContent();
+        return TypedResults.NoContent();
     }
 
-    return Results.NotFound();
-});
-
-app.Run();
+    return TypedResults.NotFound();
+}
