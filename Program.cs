@@ -1,7 +1,14 @@
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using NSwag.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Requires Microsoft.AspNetCore.Authentication.JwtBearer
+builder.Services.AddCors();
+builder.Services.AddAuthentication("Bearer").AddJwtBearer();
+builder.Services.AddAuthorization();
+
 builder.Services.AddDbContext<TodoDbContext>(opt => opt.UseInMemoryDatabase("TodoList"));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -15,6 +22,11 @@ builder.Services.AddOpenApiDocument(config =>
 });
 
 var app = builder.Build();
+
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.Logger.LogInformation("The app started");
 
 if (app.Environment.IsDevelopment())
@@ -30,7 +42,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // root entry point with link to swagger
-var root = app.MapGet("/", () => TypedResults.Text("<h1>Todo API</h1><a href='/swagger'>Swagger Documentation</a>", "text/html"));
+app.MapGet("/", () => TypedResults.Text("<h1>Todo API</h1><a href='/swagger'>Swagger Documentation</a>", "text/html"));
 
 var todoItems = app.MapGroup("/todoitems");
 todoItems.MapGet("/", GetAllTodos);
@@ -39,6 +51,10 @@ todoItems.MapGet("/{id}", GetTodo);
 todoItems.MapPost("/", CreateTodo);
 todoItems.MapPut("/{id}", UpdateTodo);
 todoItems.MapDelete("/{id}", DeleteTodo);
+
+// test authorized endpoint with JWT token via curl
+app.MapGet("/secret", (ClaimsPrincipal user) => $"Hello {user.Identity?.Name}. My secret")
+    .RequireAuthorization();
 
 app.Logger.LogInformation("Registered routes");
 app.Run();
