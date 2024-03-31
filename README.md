@@ -7,3 +7,8 @@ Based on the Microsoft ASP.NET Core tutorial: [Create a minimal API with ASP.NET
 * [Visual Studio Code](https://code.visualstudio.com/download)
 * [C# for Visual Studio Code (latest version)](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp)
 * [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+
+## Development
+
+1. Run `Program.cs`
+2. Hit http://localhost:3000/ in your browser

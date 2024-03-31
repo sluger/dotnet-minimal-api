@@ -14,7 +14,8 @@ builder.Services.AddOpenApiDocument(config =>
     config.Version = "v1";
 });
 
-WebApplication app = builder.Build();
+var app = builder.Build();
+app.Logger.LogInformation("The app started");
 
 if (app.Environment.IsDevelopment())
 {
@@ -28,8 +29,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-var todoItems = app.MapGroup("/todoitems");
+// root entry point with link to swagger
+var root = app.MapGet("/", () => TypedResults.Text("<h1>Todo API</h1><a href='/swagger'>Swagger Documentation</a>", "text/html"));
 
+var todoItems = app.MapGroup("/todoitems");
 todoItems.MapGet("/", GetAllTodos);
 todoItems.MapGet("/complete", GetCompleteTodos);
 todoItems.MapGet("/{id}", GetTodo);
@@ -37,6 +40,7 @@ todoItems.MapPost("/", CreateTodo);
 todoItems.MapPut("/{id}", UpdateTodo);
 todoItems.MapDelete("/{id}", DeleteTodo);
 
+app.Logger.LogInformation("Registered routes");
 app.Run();
 
 static async Task<IResult> GetAllTodos(TodoDbContext db)
