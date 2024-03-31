@@ -10,5 +10,5 @@ Based on the Microsoft ASP.NET Core tutorial: [Create a minimal API with ASP.NET
 
 ## Development
 
-1. Run `Program.cs`
+1. Run `Program.cs` by clicking the play button in VS Code 
 2. Hit http://localhost:3000/ in your browser
