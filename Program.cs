@@ -2,7 +2,17 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using NSwag.AspNetCore;
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("http://localhost:5173");
+                      });
+});
 
 // Requires Microsoft.AspNetCore.Authentication.JwtBearer
 builder.Services.AddCors();
@@ -23,7 +33,7 @@ builder.Services.AddOpenApiDocument(config =>
 
 var app = builder.Build();
 
-app.UseCors();
+app.UseCors(MyAllowSpecificOrigins);
 app.UseAuthentication();
 app.UseAuthorization();
 
